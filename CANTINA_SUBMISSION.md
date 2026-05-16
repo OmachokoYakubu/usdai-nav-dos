@@ -27,21 +27,19 @@ In `PoolPositionManager.sol`, the `_assets()` function (called by `totalAssets()
 171:                 value += _getTickPosition(position, IPool(pool), uint128(ticks[j]), valuationType).value;
 ```
 
-### Impact: Permanent Fund Freezing
-Since `totalAssets()` is required to calculate the share price for every deposit and withdrawal, a single "brick" event (exceeding gas limits) renders the entire contract unusable. Users will be unable to exit their positions, and new capital cannot enter. 
-
-Our PoC demonstrates that at approximately **600 positions**, the gas cost exceeds **30M gas** (the standard block limit for many EVM chains including Arbitrum).
+### Impact: Protocol Hostage / State Fragmentation Attack
+An external bad actor can **intentionally brick the protocol** by fragmenting its state. By creating hundreds of tiny lending positions (exploiting low-cost entry into yield pools/ticks), an attacker forces the gas cost of `totalAssets()` to exceed the 30M block gas limit. This freezes all user funds (~$100M+ projected TVL) and renders the protocol completely unusable, allowing the attacker to demand a ransom or profit from the protocol's failure.
 
 ## Hans Pillars Analysis
 
 ### Impact Explanation (Hans Pillar 2: Impact)
-- **Technical Impact**: Complete Availability Failure. The protocol's core accounting function (`totalAssets`) becomes uncallable, breaking the ERC-4626 standard and all dependent logic.
-- **Economic Impact**: **Total Fund Freeze (~$100M+ projected TVL)**. If the protocol bricks on-chain, all user assets are permanently locked in the vault as no one can execute a `withdraw` or `redeem` transaction.
+- **Technical Impact**: Complete Availability Failure. The core accounting function becomes uncallable, breaking all ERC-4626 logic.
+- **Economic Impact**: **Total Protocol Failure (~$100M+ TVL Frozen)**. An attacker can effectively "lock" the vault, preventing any exits and holding all user capital hostage.
 
 ### Likelihood Explanation (Hans Pillar 1: Likelihood)
-- **Attack Complexity**: N/A (Scale-Driven). The vulnerability is a fundamental architectural flaw that triggers automatically as the protocol succeeds and grows.
-- **Economic Feasibility**: High. No external cost is required to trigger this; it is a "time bomb" built into the scaling logic.
-- **Likelihood Rating**: **High**. Given the goal of yield aggregation across many pools and ticks, reaching the ~600 position threshold is an expected outcome of protocol growth.
+- **Attack Complexity**: Low. Requires only the capital to open ~600 fragmented positions, which can be done automatedly.
+- **Economic Feasibility**: High. The cost to "brick" the protocol is negligible compared to the total TVL that becomes frozen/exploitable.
+- **Likelihood Rating**: **High**.
 
 ## Proof of Concept
 The PoC simulates a growing protocol state by mocking 600 lending positions and measuring the gas cost of `totalAssets()`.
