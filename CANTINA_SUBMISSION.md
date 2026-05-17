@@ -119,4 +119,4 @@ The protocol must move away from on-chain unbounded iteration for NAV calculatio
 1.  **Stateful NAV Tracking**: Update a global `totalNav` variable during every `poolDeposit`, `poolWithdraw`, and yield-harvesting event.
 2.  **Checkpointing**: Implement a system where NAV is updated in chunks or via off-chain oracles if complexity remains high.
 
-Detailed remediation steps are provided in [REMEDIATION_STRATEGY.md](./REMEDIATION_STRATEGY.md).
+Detailed remediation steps are provided in [REMEDIATION_STRATEGY.md](https://github.com/OmachokoYakubu/usdai-nav-dos/blob/main/REMEDIATION_STRATEGY.md).
